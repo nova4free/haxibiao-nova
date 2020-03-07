@@ -92,7 +92,7 @@ abstract class IntegrationTest extends TestCase
     {
         $this->loadMigrationsFrom([
             '--database' => 'sqlite',
-            '--realpath' => realpath(__DIR__.'/Migrations'),
+            '--path' => realpath(__DIR__.'/Migrations'),
         ]);
     }
 
