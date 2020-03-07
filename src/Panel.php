@@ -2,11 +2,13 @@
 
 namespace Laravel\Nova;
 
-use JsonSerializable;
 use Illuminate\Http\Resources\MergeValue;
+use JsonSerializable;
 
 class Panel extends MergeValue implements JsonSerializable
 {
+    use Metable;
+
     /**
      * The name of the panel.
      *
@@ -22,11 +24,25 @@ class Panel extends MergeValue implements JsonSerializable
     public $data;
 
     /**
+     * The panel's component.
+     *
+     * @var string
+     */
+    public $component = 'panel';
+
+    /**
      * Indicates whether the detail toolbar should be visible on this panel.
      *
      * @var bool
      */
     public $showToolbar = false;
+
+    /**
+     * The initial field display limit.
+     *
+     * @var int|null
+     */
+    public $limit = null;
 
     /**
      * Create a new panel instance.
@@ -61,9 +77,37 @@ class Panel extends MergeValue implements JsonSerializable
      * @param  \Laravel\Nova\Resource  $resource
      * @return string
      */
-    public static function defaultNameFor(Resource $resource)
+    public static function defaultNameForDetail(Resource $resource)
     {
-        return $resource->singularLabel().' '.__('Details');
+        return __(':resource Details', [
+            'resource' => $resource->singularLabel(),
+        ]);
+    }
+
+    /**
+     * Get the default panel name for a create panel.
+     *
+     * @param  \Laravel\Nova\Resource  $resource
+     * @return string
+     */
+    public static function defaultNameForCreate(Resource $resource)
+    {
+        return __('Create :resource', [
+            'resource' => $resource->singularLabel(),
+        ]);
+    }
+
+    /**
+     * Get the default panel name for the update panel.
+     *
+     * @param  \Laravel\Nova\Resource  $resource
+     * @return string
+     */
+    public static function defaultNameForUpdate(Resource $resource)
+    {
+        return __('Update :resource', [
+            'resource' => $resource->singularLabel(),
+        ]);
     }
 
     /**
@@ -79,16 +123,53 @@ class Panel extends MergeValue implements JsonSerializable
     }
 
     /**
+     * Set the number of initially visible fields.
+     *
+     * @param int $limit
+     * @return $this
+     */
+    public function limit($limit)
+    {
+        $this->limit = $limit;
+
+        return $this;
+    }
+
+    /**
+     * Set the Vue component key for the panel.
+     *
+     * @param  string  $component
+     * @return $this
+     */
+    public function withComponent($component)
+    {
+        $this->component = $component;
+
+        return $this;
+    }
+
+    /**
+     * Get the Vue component key for the panel.
+     *
+     * @return string
+     */
+    public function component()
+    {
+        return $this->component;
+    }
+
+    /**
      * Prepare the panel for JSON serialization.
      *
      * @return array
      */
     public function jsonSerialize()
     {
-        return [
-            'component' => 'panel',
+        return array_merge([
+            'component' => $this->component(),
             'name' => $this->name,
             'showToolbar' => $this->showToolbar,
-        ];
+            'limit' => $this->limit,
+        ], $this->meta());
     }
 }

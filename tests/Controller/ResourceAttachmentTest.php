@@ -2,15 +2,18 @@
 
 namespace Laravel\Nova\Tests\Controller;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Actions\ActionEvent;
+use Laravel\Nova\Nova;
 use Laravel\Nova\Tests\Fixtures\Role;
 use Laravel\Nova\Tests\Fixtures\User;
-use Laravel\Nova\Tests\IntegrationTest;
 use Laravel\Nova\Tests\Fixtures\UserPolicy;
+use Laravel\Nova\Tests\IntegrationTest;
 
 class ResourceAttachmentTest extends IntegrationTest
 {
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -34,6 +37,21 @@ class ResourceAttachmentTest extends IntegrationTest
         $this->assertCount(1, $user->fresh()->roles);
         $this->assertEquals($role->id, $user->fresh()->roles->first()->id);
         $this->assertEquals('Y', $user->fresh()->roles->first()->pivot->admin);
+
+        $this->assertCount(1, ActionEvent::all());
+
+        $actionEvent = ActionEvent::first();
+        $this->assertEquals('Attach', $actionEvent->name);
+        $this->assertEquals('finished', $actionEvent->status);
+
+        $this->assertEquals($user->id, $actionEvent->target->id);
+        $this->assertEmpty($actionEvent->original);
+
+        $this->assertSubset([
+            'user_id' => $user->id,
+            'role_id' => $role->id,
+            'admin' => 'Y',
+        ], $actionEvent->changes);
     }
 
     public function test_cant_set_pivot_fields_that_arent_authorized()
@@ -205,5 +223,60 @@ class ResourceAttachmentTest extends IntegrationTest
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['admin']);
+    }
+
+    public function test_can_attach_resources_with_custom_foreign_keys()
+    {
+        $user = factory(User::class)->create();
+        $user2 = factory(User::class)->create();
+
+        $response = $this->withExceptionHandling()
+            ->postJson('/nova-api/users/'.$user->id.'/attach/users', [
+                'users' => $user2->id,
+                'viaRelationship' => 'relatedUsers',
+            ]);
+
+        $response->assertStatus(200);
+
+        $this->assertCount(1, $user->fresh()->relatedUsers);
+        $this->assertEquals($user2->id, $user->fresh()->relatedUsers->first()->id);
+    }
+
+    public function test_should_store_action_event_on_correct_connection_when_updating_attachments()
+    {
+        $this->setupActionEventsOnSeparateConnection();
+
+        $user = factory(User::class)->create();
+        $role = factory(Role::class)->create();
+
+        $response = $this->withExceptionHandling()
+            ->postJson('/nova-api/users/'.$user->id.'/attach/roles', [
+                'roles' => $role->id,
+                'admin' => 'Y',
+                'viaRelationship' => 'roles',
+            ]);
+
+        $response->assertStatus(200);
+
+        $this->assertCount(1, $user->fresh()->roles);
+        $this->assertEquals($role->id, $user->fresh()->roles->first()->id);
+        $this->assertEquals('Y', $user->fresh()->roles->first()->pivot->admin);
+
+        $this->assertCount(0, DB::connection('sqlite')->table('action_events')->get());
+        $this->assertCount(1, DB::connection('sqlite-custom')->table('action_events')->get());
+
+        tap(Nova::actionEvent()->first(), function ($actionEvent) use ($user, $role) {
+            $this->assertEquals('Attach', $actionEvent->name);
+            $this->assertEquals('finished', $actionEvent->status);
+
+            $this->assertEquals($user->id, $actionEvent->target_id);
+            $this->assertEmpty($actionEvent->original);
+
+            $this->assertSubset([
+                'user_id' => $user->id,
+                'role_id' => $role->id,
+                'admin' => 'Y',
+            ], $actionEvent->changes);
+        });
     }
 }

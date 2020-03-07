@@ -2,19 +2,22 @@
 
 namespace Laravel\Nova\Tests\Controller;
 
-use Laravel\Nova\Nova;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Nova;
+use Laravel\Nova\Tests\Fixtures\ColumnFilter;
+use Laravel\Nova\Tests\Fixtures\Comment;
+use Laravel\Nova\Tests\Fixtures\CustomKeyFilter;
+use Laravel\Nova\Tests\Fixtures\IdFilter;
 use Laravel\Nova\Tests\Fixtures\Post;
 use Laravel\Nova\Tests\Fixtures\Role;
 use Laravel\Nova\Tests\Fixtures\User;
-use Laravel\Nova\Tests\IntegrationTest;
-use Laravel\Nova\Tests\Fixtures\IdFilter;
 use Laravel\Nova\Tests\Fixtures\UserPolicy;
-use Laravel\Nova\Tests\Fixtures\ColumnFilter;
+use Laravel\Nova\Tests\IntegrationTest;
 
 class ResourceIndexTest extends IntegrationTest
 {
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -30,11 +33,12 @@ class ResourceIndexTest extends IntegrationTest
         $response = $this->withExceptionHandling()
                         ->getJson('/nova-api/users');
 
-        $this->assertEquals('UserResources', $response->original['label']);
+        $this->assertEquals('User Resources', $response->original['label']);
         $this->assertEquals($user->id, $response->original['resources'][0]['id']->value);
         $this->assertTrue($response->original['resources'][0]['authorizedToUpdate']);
         $this->assertTrue($response->original['resources'][0]['authorizedToDelete']);
         $this->assertTrue($response->original['resources'][0]['softDeletes']);
+        $this->assertEquals([25, 50, 100], $response->original['per_page_options']);
 
         $fields = $response->original['resources'][0]['fields'];
         $nameField = collect($fields)->where('attribute', 'name')->first();
@@ -228,6 +232,27 @@ class ResourceIndexTest extends IntegrationTest
         $response->assertJsonCount(1, 'resources');
     }
 
+    public function test_can_filter_resources_with_a_custom_key()
+    {
+        factory(User::class)->create();
+        factory(User::class)->create();
+        factory(User::class)->create();
+
+        $filters = base64_encode(json_encode([
+            [
+                'class' => (new CustomKeyFilter)->key(),
+                'value' => 2,
+            ],
+        ]));
+
+        $response = $this->withExceptionHandling()
+                        ->getJson('/nova-api/users?filters='.$filters);
+
+        $this->assertEquals(2, $response->original['resources'][0]['id']->value);
+
+        $response->assertJsonCount(1, 'resources');
+    }
+
     public function test_filters_can_have_constructor_parameters()
     {
         factory(User::class)->create();
@@ -346,5 +371,40 @@ class ResourceIndexTest extends IntegrationTest
                         ->getJson('/nova-api/forbidden-users');
 
         $response->assertStatus(200);
+    }
+
+    public function test_eager_relations_load()
+    {
+        $post1 = factory(Post::class)->create();
+
+        factory(Comment::class)->create()->commentable(false)->associate($post1);
+        factory(Comment::class)->create()->commentable()->associate($post1);
+        factory(Comment::class)->create()->commentable()->associate($post1);
+
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+
+        // Eager-loading of the comment's author relation is not enabled.
+        $response = $this->withExceptionHandling()
+            ->getJson('/nova-api/comments');
+
+        $response->assertStatus(200);
+
+        $this->assertEquals(10, count(DB::getQueryLog()));
+
+        // Enable eager-loading of the comment's author relation.
+        DB::flushQueryLog();
+        $_SERVER['nova.comments.useEager'] = true;
+
+        $response = $this->withExceptionHandling()
+            ->getJson('/nova-api/comments');
+
+        $response->assertStatus(200);
+
+        $this->assertEquals(3, count(DB::getQueryLog()));
+
+        unset($_SERVER['nova.comments.useEager']);
+
+        DB::disableQueryLog();
     }
 }

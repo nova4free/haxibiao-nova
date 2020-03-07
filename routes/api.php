@@ -1,10 +1,11 @@
 <?php
 
+use Illuminate\Http\Middleware\CheckResponseForModifications;
 use Illuminate\Support\Facades\Route;
 
 // Scripts & Styles...
-Route::get('/scripts/{script}', 'ScriptController@show');
-Route::get('/styles/{style}', 'StyleController@show');
+Route::get('/scripts/{script}', 'ScriptController@show')->middleware(CheckResponseForModifications::class);
+Route::get('/styles/{style}', 'StyleController@show')->middleware(CheckResponseForModifications::class);
 
 // Global Search...
 Route::get('/search', 'SearchController@index');
@@ -22,6 +23,9 @@ Route::get('/{resource}/{resourceId}/download/{field}', 'FieldDownloadController
 Route::delete('/{resource}/{resourceId}/field/{field}', 'FieldDestroyController@handle');
 Route::delete('/{resource}/{resourceId}/{relatedResource}/{relatedResourceId}/field/{field}', 'PivotFieldDestroyController@handle');
 
+// Dashboards...
+Route::get('/dashboards/{dashboard}', 'DashboardCardController@index');
+
 // Actions...
 Route::get('/{resource}/actions', 'ActionController@index');
 Route::post('/{resource}/action', 'ActionController@store');
@@ -36,6 +40,7 @@ Route::get('/{resource}/lens/{lens}/count', 'LensResourceCountController@show');
 Route::delete('/{resource}/lens/{lens}', 'LensResourceDestroyController@handle');
 Route::delete('/{resource}/lens/{lens}/force', 'LensResourceForceDeleteController@handle');
 Route::put('/{resource}/lens/{lens}/restore', 'LensResourceRestoreController@handle');
+Route::get('/{resource}/lens/{lens}/actions', 'LensActionController@index');
 Route::post('/{resource}/lens/{lens}/action', 'LensActionController@store');
 Route::get('/{resource}/lens/{lens}/filters', 'LensFilterController@index');
 
@@ -46,8 +51,12 @@ Route::get('/{resource}/metrics', 'MetricController@index');
 Route::get('/{resource}/metrics/{metric}', 'MetricController@show');
 Route::get('/{resource}/{resourceId}/metrics/{metric}', 'DetailMetricController@show');
 
+Route::get('/{resource}/lens/{lens}/metrics', 'LensMetricController@index');
+Route::get('/{resource}/lens/{lens}/metrics/{metric}', 'LensMetricController@show');
+
 Route::get('/cards', 'DashboardCardController@index');
 Route::get('/{resource}/cards', 'CardController@index');
+Route::get('/{resource}/lens/{lens}/cards', 'LensCardController@index');
 
 // Authorization Information...
 Route::get('/{resource}/relate-authorization', 'RelatableAuthorizationController@show');

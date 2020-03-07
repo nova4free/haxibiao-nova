@@ -2,14 +2,18 @@
 
 namespace Laravel\Nova\Tests\Controller;
 
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Actions\ActionEvent;
+use Laravel\Nova\Nova;
 use Laravel\Nova\Tests\Fixtures\Role;
+use Laravel\Nova\Tests\Fixtures\RoleAssignment;
 use Laravel\Nova\Tests\Fixtures\User;
 use Laravel\Nova\Tests\IntegrationTest;
 
 class ResourceAttachmentUpdateTest extends IntegrationTest
 {
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -39,11 +43,14 @@ class ResourceAttachmentUpdateTest extends IntegrationTest
         $this->assertEquals('N', $user->fresh()->roles->first()->pivot->admin);
 
         $this->assertCount(1, ActionEvent::all());
-        $this->assertEquals('Update Attached', ActionEvent::first()->name);
-        $this->assertEquals(get_class($user), ActionEvent::first()->actionable_type);
-        $this->assertEquals($user->id, ActionEvent::first()->actionable_id);
-        $this->assertEquals($role->id, ActionEvent::first()->target->id);
-        $this->assertTrue($role->is(ActionEvent::first()->target));
+
+        $actionEvent = ActionEvent::first();
+        $this->assertEquals('Update Attached', $actionEvent->name);
+        $this->assertEquals('finished', $actionEvent->status);
+
+        $this->assertEquals($user->id, $actionEvent->target->id);
+        $this->assertSubset(['admin' => 'Y'], $actionEvent->original);
+        $this->assertSubset(['admin' => 'N'], $actionEvent->changes);
     }
 
     public function test_cant_update_pivot_fields_that_arent_authorized()
@@ -182,5 +189,78 @@ class ResourceAttachmentUpdateTest extends IntegrationTest
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['admin']);
+    }
+
+    public function test_action_event_should_honor_custom_polymorphic_type_for_attached_resource_update()
+    {
+        Relation::morphMap([
+            'user' => User::class,
+            'role' => Role::class,
+            'role_user' => RoleAssignment::class,
+        ]);
+
+        $user = factory(User::class)->create();
+        $role = factory(Role::class)->create();
+        $user->roles()->attach($role, ['admin' => 'Y']);
+
+        $response = $this->withExceptionHandling()
+                        ->postJson('/nova-api/users/'.$user->id.'/update-attached/roles/'.$role->id, [
+                            'roles' => $role->id,
+                            'admin' => 'N',
+                            'pivot-update' => 'N',
+                            'viaRelationship' => 'roles',
+                        ]);
+
+        $actionEvent = ActionEvent::first();
+
+        $this->assertEquals('Update Attached', $actionEvent->name);
+
+        $this->assertEquals('user', $actionEvent->actionable_type);
+        $this->assertEquals($user->id, $actionEvent->actionable_id);
+
+        $this->assertEquals('role', $actionEvent->target_type);
+        $this->assertEquals($role->id, $actionEvent->target_id);
+
+        $this->assertEquals('role_user', $actionEvent->model_type);
+        $this->assertEquals($user->roles->first->pivot->id, $actionEvent->model_id);
+
+        Relation::morphMap([], false);
+    }
+
+    public function test_should_store_action_event_on_correct_connection_when_updating_attachments()
+    {
+        $this->setupActionEventsOnSeparateConnection();
+
+        $user = factory(User::class)->create();
+        $role = factory(Role::class)->create();
+        $user->roles()->attach($role, ['admin' => 'Y']);
+
+        $this->assertEquals('Y', $user->fresh()->roles->first()->pivot->admin);
+
+        $response = $this->withExceptionHandling()
+            ->postJson('/nova-api/users/'.$user->id.'/update-attached/roles/'.$role->id, [
+                'roles' => $role->id,
+                'admin' => 'N',
+                'pivot-update' => 'N',
+                'viaRelationship' => 'roles',
+            ]);
+
+        $response->assertStatus(200);
+
+        $this->assertCount(1, $user->fresh()->roles);
+        $this->assertEquals($role->id, $user->fresh()->roles->first()->id);
+        $this->assertEquals('N', $user->fresh()->roles->first()->pivot->admin);
+
+        $this->assertCount(0, DB::connection('sqlite')->table('action_events')->get());
+        $this->assertCount(1, DB::connection('sqlite-custom')->table('action_events')->get());
+
+        tap(Nova::actionEvent()->first(), function ($actionEvent) use ($user) {
+            $this->assertEquals('Update Attached', $actionEvent->name);
+            $this->assertEquals('finished', $actionEvent->status);
+
+            $this->assertEquals($user->id, $actionEvent->target_id);
+            $this->assertSubset(['admin' => 'Y'], $actionEvent->original);
+            $this->assertSubset(['admin' => 'N'], $actionEvent->changes);
+        });
     }
 }
