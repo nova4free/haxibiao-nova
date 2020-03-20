@@ -14,10 +14,10 @@ abstract class Trend extends RangedMetric
     /**
      * Trend metric unit constants.
      */
-    const BY_MONTHS = 'month';
-    const BY_WEEKS = 'week';
-    const BY_DAYS = 'day';
-    const BY_HOURS = 'hour';
+    const BY_MONTHS  = 'month';
+    const BY_WEEKS   = 'week';
+    const BY_DAYS    = 'day';
+    const BY_HOURS   = 'hour';
     const BY_MINUTES = 'minute';
 
     /**
@@ -494,11 +494,11 @@ abstract class Trend extends RangedMetric
         $wrappedColumn = $query->getQuery()->getGrammar()->wrap($column);
 
         $results = $query
-                ->select(DB::raw("{$expression} as date_result, {$function}({$wrappedColumn}) as aggregate"))
-                ->whereBetween($dateColumn, [$startingDate, $endingDate])
-                ->groupBy(DB::raw($expression))
-                ->orderBy('date_result')
-                ->get();
+            ->select(DB::raw("{$expression} as date_result, {$function}({$wrappedColumn}) as aggregate"))
+            ->whereBetween($dateColumn, [$startingDate, $endingDate])
+            ->groupBy(DB::raw($expression))
+            ->orderBy('date_result')
+            ->get();
 
         $results = array_merge($possibleDateResults, $results->mapWithKeys(function ($result) use ($request, $unit) {
             return [$this->formatAggregateResultDate(
@@ -538,12 +538,12 @@ abstract class Trend extends RangedMetric
 
             case 'hour':
                 return with($now->subHours($request->range - 1), function ($now) {
-                    return $now->setTimeFromTimeString($now->hour.':00');
+                    return $now->setTimeFromTimeString($now->hour . ':00');
                 });
 
             case 'minute':
                 return with($now->subMinutes($request->range - 1), function ($now) {
-                    return $now->setTimeFromTimeString($now->hour.':'.$now->minute.':00');
+                    return $now->setTimeFromTimeString($now->hour . ':' . $now->minute . ':00');
                 });
 
             default:
@@ -570,21 +570,21 @@ abstract class Trend extends RangedMetric
 
             case 'day':
                 return with(Chronos::createFromFormat('Y-m-d', $result), function ($date) {
-                    return __($date->format('F')).' '.$date->format('j').', '.$date->format('Y');
+                    return __($date->format('F')) . ' ' . $date->format('j') . ', ' . $date->format('Y');
                 });
 
             case 'hour':
                 return with(Chronos::createFromFormat('Y-m-d H:00', $result), function ($date) use ($twelveHourTime) {
                     return $twelveHourTime
-                            ? __($date->format('F')).' '.$date->format('j').' - '.$date->format('g:00 A')
-                            : __($date->format('F')).' '.$date->format('j').' - '.$date->format('G:00');
+                    ? __($date->format('F')) . ' ' . $date->format('j') . ' - ' . $date->format('g:00 A')
+                    : __($date->format('F')) . ' ' . $date->format('j') . ' - ' . $date->format('G:00');
                 });
 
             case 'minute':
                 return with(Chronos::createFromFormat('Y-m-d H:i:00', $result), function ($date) use ($twelveHourTime) {
                     return $twelveHourTime
-                            ? __($date->format('F')).' '.$date->format('j').' - '.$date->format('g:i A')
-                            : __($date->format('F')).' '.$date->format('j').' - '.$date->format('G:i');
+                    ? __($date->format('F')) . ' ' . $date->format('j') . ' - ' . $date->format('g:i A')
+                    : __($date->format('F')) . ' ' . $date->format('j') . ' - ' . $date->format('G:i');
                 });
         }
     }
@@ -600,7 +600,7 @@ abstract class Trend extends RangedMetric
         [$year, $month] = explode('-', $result);
 
         return with(Chronos::create((int) $year, (int) $month, 1), function ($date) {
-            return __($date->format('F')).' '.$date->format('Y');
+            return __($date->format('F')) . ' ' . $date->format('Y');
         });
     }
 
@@ -621,8 +621,8 @@ abstract class Trend extends RangedMetric
             Chronos::instance($isoDate)->endOfWeek(),
         ];
 
-        return __($startingDate->format('F')).' '.$startingDate->format('j').' - '.
-               __($endingDate->format('F')).' '.$endingDate->format('j');
+        return __($startingDate->format('F')) . ' ' . $startingDate->format('j') . ' - ' .
+        __($endingDate->format('F')) . ' ' . $endingDate->format('j');
     }
 
     /**
@@ -636,12 +636,11 @@ abstract class Trend extends RangedMetric
      * @return array
      */
     protected function getAllPossibleDateResults(Chronos $startingDate, Chronos $endingDate,
-                                                 $unit, $timezone, $twelveHourTime)
-    {
+        $unit, $timezone, $twelveHourTime) {
         $nextDate = $startingDate;
 
-        if (! empty($timezone)) {
-            $nextDate = $startingDate->setTimezone($timezone);
+        if (!empty($timezone)) {
+            $nextDate   = $startingDate->setTimezone($timezone);
             $endingDate = $endingDate->setTimezone($timezone);
         }
 
@@ -686,24 +685,24 @@ abstract class Trend extends RangedMetric
     {
         switch ($unit) {
             case 'month':
-                return __($date->format('F')).' '.$date->format('Y');
+                return __($date->format('F')) . ' ' . $date->format('Y');
 
             case 'week':
-                return __($date->startOfWeek()->format('F')).' '.$date->startOfWeek()->format('j').' - '.
-                       __($date->endOfWeek()->format('F')).' '.$date->endOfWeek()->format('j');
+                return __($date->startOfWeek()->format('F')) . ' ' . $date->startOfWeek()->format('j') . ' - ' .
+                __($date->endOfWeek()->format('F')) . ' ' . $date->endOfWeek()->format('j');
 
             case 'day':
-                return __($date->format('F')).' '.$date->format('j').', '.$date->format('Y');
+                return __($date->format('F')) . ' ' . $date->format('j') . ', ' . $date->format('Y');
 
             case 'hour':
                 return $twelveHourTime
-                        ? __($date->format('F')).' '.$date->format('j').' - '.$date->format('g:00 A')
-                        : __($date->format('F')).' '.$date->format('j').' - '.$date->format('G:00');
+                ? __($date->format('F')) . ' ' . $date->format('j') . ' - ' . $date->format('g:00 A')
+                : __($date->format('F')) . ' ' . $date->format('j') . ' - ' . $date->format('G:00');
 
             case 'minute':
                 return $twelveHourTime
-                        ? __($date->format('F')).' '.$date->format('j').' - '.$date->format('g:i A')
-                        : __($date->format('F')).' '.$date->format('j').' - '.$date->format('G:i');
+                ? __($date->format('F')) . ' ' . $date->format('j') . ' - ' . $date->format('g:i A')
+                : __($date->format('F')) . ' ' . $date->format('j') . ' - ' . $date->format('G:i');
         }
     }
 
@@ -714,6 +713,9 @@ abstract class Trend extends RangedMetric
      */
     private function getDefaultTimezone()
     {
-        return request()->timezone;
+        // return request()->timezone;
+
+        //据说这个能临时修复时区异常问题
+        return null;
     }
 }
