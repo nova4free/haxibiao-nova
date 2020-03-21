@@ -716,6 +716,6 @@ abstract class Trend extends RangedMetric
         // return request()->timezone;
 
         //据说这个能临时修复时区异常问题
-        return null;
+        return "Asia/Shanghai";
     }
 }
