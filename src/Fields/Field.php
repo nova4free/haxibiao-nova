@@ -65,6 +65,13 @@ abstract class Field extends FieldElement implements JsonSerializable, Resolvabl
     protected $computedCallback;
 
     /**
+     * The callback to be used for the field's default value.
+     *
+     * @var callable
+     */
+    protected $defaultCallback;
+
+    /**
      * The validation rules for creation and updates.
      *
      * @var array
@@ -167,6 +174,8 @@ abstract class Field extends FieldElement implements JsonSerializable, Resolvabl
     {
         $this->name = $name;
         $this->resolveCallback = $resolveCallback;
+
+        $this->default(null);
 
         if ($attribute instanceof Closure ||
             (is_callable($attribute) && is_object($attribute))) {
@@ -717,29 +726,61 @@ abstract class Field extends FieldElement implements JsonSerializable, Resolvabl
     }
 
     /**
+     * Set the callback to be used for determining the field's default value.
+     *
+     * @param $callback
+     * @return $this
+     */
+    public function default($callback)
+    {
+        $this->defaultCallback = $callback;
+
+        return $this;
+    }
+
+    /**
+     * Resolve the default value for the field.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return callable|mixed
+     */
+    protected function resolveDefaultValue(NovaRequest $request)
+    {
+        if ($request->isCreateOrAttachRequest()) {
+            if (is_null($this->value) && is_callable($this->defaultCallback)) {
+                return call_user_func($this->defaultCallback, $request);
+            }
+
+            return $this->defaultCallback;
+        }
+    }
+
+    /**
      * Prepare the field for JSON serialization.
      *
      * @return array
      */
     public function jsonSerialize()
     {
-        return array_merge([
-            'attribute' => $this->attribute,
-            'component' => $this->component(),
-            'helpText' => $this->getHelpText(),
-            'indexName' => $this->name,
-            'name' => $this->name,
-            'nullable' => $this->nullable,
-            'panel' => $this->panel,
-            'prefixComponent' => true,
-            'readonly' => $this->isReadonly(app(NovaRequest::class)),
-            'required' => $this->isRequired(app(NovaRequest::class)),
-            'sortable' => $this->sortable,
-            'sortableUriKey' => $this->sortableUriKey(),
-            'stacked' => $this->stacked,
-            'textAlign' => $this->textAlign,
-            'validationKey' => $this->validationKey(),
-            'value' => $this->value,
-        ], $this->meta());
+        return with(app(NovaRequest::class), function ($request) {
+            return array_merge([
+                'attribute' => $this->attribute,
+                'component' => $this->component(),
+                'helpText' => $this->getHelpText(),
+                'indexName' => $this->name,
+                'name' => $this->name,
+                'nullable' => $this->nullable,
+                'panel' => $this->panel,
+                'prefixComponent' => true,
+                'readonly' => $this->isReadonly($request),
+                'required' => $this->isRequired($request),
+                'sortable' => $this->sortable,
+                'sortableUriKey' => $this->sortableUriKey(),
+                'stacked' => $this->stacked,
+                'textAlign' => $this->textAlign,
+                'validationKey' => $this->validationKey(),
+                'value' => $this->resolveDefaultValue($request) ?? $this->value,
+            ], $this->meta());
+        });
     }
 }

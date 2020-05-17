@@ -33,6 +33,10 @@ class User extends Authenticatable
         'meta' => 'array',
     ];
 
+    protected $attributes = [
+        'name' => 'Anonymous User',
+    ];
+
     /**
      * The password reset token that was last issued.
      *

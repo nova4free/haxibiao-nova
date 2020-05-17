@@ -147,7 +147,7 @@ trait ResolvesFields
         $fields = $this->removeNonCreationFields(
             $request,
             $this->availableFields($request)->authorized($request)
-        );
+        )->resolve($this->resource);
 
         return $request->viaRelationship()
             ? $this->withPivotFields($request, $fields->all())

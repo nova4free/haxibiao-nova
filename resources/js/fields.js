@@ -29,6 +29,17 @@ Vue.component('index-text-field', require('./components/Index/TextField.vue'))
 Vue.component('detail-text-field', require('./components/Detail/TextField.vue'))
 Vue.component('form-text-field', require('./components/Form/TextField.vue'))
 
+// Hidden Field...
+Vue.component(
+  'index-hidden-field',
+  require('./components/Index/HiddenField.vue')
+)
+Vue.component(
+  'detail-hidden-field',
+  require('./components/Detail/HiddenField.vue')
+)
+Vue.component('form-hidden-field', require('./components/Form/HiddenField.vue'))
+
 // Password Field...
 Vue.component(
   'index-password-field',

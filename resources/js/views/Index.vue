@@ -179,7 +179,7 @@
             :per-page-options="perPageOptions"
             :show-trashed-option="
               authorizedToForceDeleteAnyResources ||
-                authorizedToRestoreAnyResources
+              authorizedToRestoreAnyResources
             "
             @clear-selected-filters="clearSelectedFilters"
             @filter-changed="filterChanged"

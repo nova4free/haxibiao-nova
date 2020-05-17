@@ -4,7 +4,7 @@
       ref="selectBox"
       v-if="actions.length > 1"
       class="select-box-sm mr-2 h-6 text-xs appearance-none bg-40 pl-2 pr-6 active:outline-none active:shadow-outline focus:outline-none focus:shadow-outline"
-      style="max-width: 90px"
+      style="max-width: 90px;"
       @change="handleSelectionChange"
     >
       <option disabled selected>{{ __('Actions') }}</option>

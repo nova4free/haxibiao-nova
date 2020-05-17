@@ -52,6 +52,11 @@ class PostResource extends Resource
             }),
 
             Text::make('Title', 'title')->rules('required', 'string', 'max:255'),
+
+            Text::make('Slug', 'slug')->rules('required', 'string', 'max:255')->default(function ($request) {
+                return 'default-slug';
+            }),
+
             Text::make('Description', 'description')->rules('string', 'max:255')
                 ->nullable()
                 ->canSee(function () {

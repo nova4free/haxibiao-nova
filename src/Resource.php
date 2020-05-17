@@ -174,7 +174,7 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
      */
     public static function availableForNavigation(Request $request)
     {
-        return true;
+        return static::$displayInNavigation;
     }
 
     /**

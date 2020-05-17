@@ -503,6 +503,42 @@ class FieldTest extends IntegrationTest
             'helpText' => 'Custom help text.',
         ], $field->jsonSerialize());
     }
+
+    public function test_fields_can_specify_a_default_value_as_callback()
+    {
+        $field = Text::make('Name')->default(function (NovaRequest $request) {
+            return $request->url();
+        });
+
+        $this->app->instance(
+            NovaRequest::class,
+            NovaRequest::create('/', 'GET', [
+                'editing' => true,
+                'editMode' => 'create',
+            ])
+        );
+
+        $this->assertSubset([
+            'value' => 'http://localhost',
+        ], $field->jsonSerialize());
+    }
+
+    public function test_fields_can_specify_a_default_value()
+    {
+        $field = Text::make('Name')->default('David Hemphill');
+
+        $this->app->instance(
+            NovaRequest::class,
+            NovaRequest::create('/', 'GET', [
+                'editing' => true,
+                'editMode' => 'create',
+            ])
+        );
+
+        $this->assertSubset([
+            'value' => 'David Hemphill',
+        ], $field->jsonSerialize());
+    }
 }
 
 class SuggestionOptions

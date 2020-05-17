@@ -68,7 +68,7 @@ export default class Nova {
       router,
       store,
       components: { Loading },
-      mounted: function() {
+      mounted: function () {
         this.$loading = this.$refs.loading
 
         _this.$on('error', message => {
