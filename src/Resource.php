@@ -30,6 +30,20 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
         ResolvesCards;
 
     /**
+     * The visual style used for the table. Available options are 'tight' and 'default'.
+     *
+     * @var string
+     */
+    public static $tableStyle = 'default';
+
+    /**
+     * Whether to show borders for each column on the X-axis.
+     *
+     * @var bool
+     */
+    public static $showColumnBorders = false;
+
+    /**
      * The underlying model resource instance.
      *
      * @var \Illuminate\Database\Eloquent\Model
@@ -119,6 +133,13 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
      * @var bool
      */
     public static $trafficCop = true;
+
+    /**
+     * The maximum value of the resource's primary key column.
+     *
+     * @var int
+     */
+    public static $maxPrimaryKeySize = PHP_INT_MAX;
 
     /**
      * The default displayable pivot class name.
@@ -244,7 +265,7 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
      */
     public static function label()
     {
-        return Str::plural(Str::title(Str::snake(class_basename(get_called_class()), ' ')));
+        return __(Str::plural(Str::title(Str::snake(class_basename(get_called_class()), ' '))));
     }
 
     /**
@@ -254,7 +275,7 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
      */
     public static function singularLabel()
     {
-        return Str::singular(static::label());
+        return __(Str::singular(Str::title(Str::snake(class_basename(get_called_class()), ' '))));
     }
 
     /**
@@ -275,6 +296,16 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
     public function subtitle()
     {
         //
+    }
+
+    /**
+     * Get the text for the create resource button.
+     *
+     * @return string|null
+     */
+    public static function createButtonLabel()
+    {
+        return __('Create :resource', ['resource' => static::singularLabel()]);
     }
 
     /**
@@ -479,6 +510,16 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
     }
 
     /**
+     * Return the maximum primary key size for the Resource.
+     *
+     * @return int
+     */
+    public static function maxPrimaryKeySize()
+    {
+        return static::$maxPrimaryKeySize;
+    }
+
+    /**
      * Return a fresh resource instance.
      *
      * @return \Laravel\Nova\Resource
@@ -486,5 +527,25 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
     protected static function newResource()
     {
         return new static(static::newModel());
+    }
+
+    /**
+     * Determine whether to show borders for each column on the X-axis.
+     *
+     * @return string
+     */
+    public static function showColumnBorders()
+    {
+        return static::$showColumnBorders;
+    }
+
+    /**
+     * Get the visual style that should be used for the table.
+     *
+     * @return string
+     */
+    public static function tableStyle()
+    {
+        return static::$tableStyle;
     }
 }

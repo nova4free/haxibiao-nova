@@ -58,6 +58,7 @@
 
         <!-- Create / Attach Button -->
         <create-resource-button
+          :label="createButtonLabel"
           :singular-name="singularName"
           :resource-name="resourceName"
           :via-resource="viaResource"
@@ -252,6 +253,7 @@
 
             <create-resource-button
               classes="btn btn-sm btn-outline inline-flex items-center focus:outline-none focus:shadow-outline active:outline-none active:shadow-outline"
+              :label="createButtonLabel"
               :singular-name="singularName"
               :resource-name="resourceName"
               :via-resource="viaResource"
@@ -1006,6 +1008,13 @@ export default {
     },
 
     /**
+     * Get the default label for the create button
+     */
+    createButtonLabel() {
+      return this.resourceInformation.createButtonLabel
+    },
+
+    /**
      * Get the selected resources for the action selector.
      */
     selectedResourcesForActionSelector() {
@@ -1151,9 +1160,9 @@ export default {
 
       return (
         this.resources.length &&
-        `${first + 1}-${first + this.resources.length} ${this.__('of')} ${
-          this.allMatchingResourceCount
-        }`
+        `${Nova.formatNumber(first + 1)}-${Nova.formatNumber(
+          first + this.resources.length
+        )} ${this.__('of')} ${Nova.formatNumber(this.allMatchingResourceCount)}`
       )
     },
 

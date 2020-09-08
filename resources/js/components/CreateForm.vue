@@ -47,7 +47,7 @@
           :disabled="isWorking"
           :processing="wasSubmittedViaCreateResource"
         >
-          {{ __('Create :resource', { resource: singularName }) }}
+          {{ createButtonLabel }}
         </progress-button>
       </div>
     </form>
@@ -206,6 +206,13 @@ export default {
           if (error.response.status == 422) {
             this.validationErrors = new Errors(error.response.data.errors)
             Nova.error(this.__('There was a problem submitting the form.'))
+          } else {
+            Nova.error(
+              this.__('There was a problem submitting the form.') +
+                ' "' +
+                error.response.statusText +
+                '"'
+            )
           }
         }
       }
@@ -271,6 +278,10 @@ export default {
       }
 
       return this.resourceInformation.singularLabel
+    },
+
+    createButtonLabel() {
+      return this.resourceInformation.createButtonLabel
     },
 
     isRelation() {
