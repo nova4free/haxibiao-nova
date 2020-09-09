@@ -255,6 +255,17 @@ abstract class Field extends FieldElement implements JsonSerializable, Resolvabl
     }
 
     /**
+     * Resolve the default value for an Action field.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return void
+     */
+    public function resolveForAction($request)
+    {
+        $this->resolveDefaultValue($request);
+    }
+
+    /**
      * Resolve the given attribute from the given resource.
      *
      * @param  mixed  $resource
@@ -746,13 +757,27 @@ abstract class Field extends FieldElement implements JsonSerializable, Resolvabl
      */
     protected function resolveDefaultValue(NovaRequest $request)
     {
-        if ($request->isCreateOrAttachRequest()) {
+        if ($request->isCreateOrAttachRequest() || $request->isActionRequest()) {
             if (is_null($this->value) && $this->defaultCallback instanceof Closure) {
                 return call_user_func($this->defaultCallback, $request);
             }
 
             return $this->defaultCallback;
         }
+    }
+
+    /**
+     * Set the placeholder text for the field if supported.
+     *
+     * @param string $text
+     * @return $this
+     */
+    public function placeholder($text)
+    {
+        $this->placeholder = $text;
+        $this->withMeta(['extraAttributes' => ['placeholder' => $text]]);
+
+        return $this;
     }
 
     /**

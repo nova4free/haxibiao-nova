@@ -3,7 +3,7 @@
     :field="field"
     :errors="errors"
     :full-width-content="true"
-    :show-help-text="!isReadonly"
+    :show-help-text="!isReadonly && showHelpText"
   >
     <template slot="field">
       <div v-if="hasValue" :class="{ 'mb-6': !isReadonly }">

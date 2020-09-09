@@ -4,6 +4,7 @@
     :errors="errors"
     :full-width-content="true"
     :key="index"
+    :show-help-text="showHelpText"
   >
     <template slot="field">
       <div class="rounded-lg" :class="{ disabled: isReadonly }">

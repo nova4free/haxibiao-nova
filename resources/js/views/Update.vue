@@ -9,6 +9,7 @@
     <form
       v-if="panels"
       @submit="submitViaUpdateResource"
+      @change="onUpdateFormStatus"
       autocomplete="off"
       ref="form"
     >
@@ -51,7 +52,7 @@
           :disabled="isWorking"
           :processing="wasSubmittedViaUpdateResource"
         >
-          {{ __('Update :resource', { resource: singularName }) }}
+          {{ updateButtonLabel }}
         </progress-button>
       </div>
     </form>
@@ -63,11 +64,16 @@ import {
   mapProps,
   Errors,
   InteractsWithResourceInformation,
+  PreventsFormAbandonment,
 } from 'laravel-nova'
 import HandlesUploads from '@/mixins/HandlesUploads'
 
 export default {
-  mixins: [InteractsWithResourceInformation, HandlesUploads],
+  mixins: [
+    InteractsWithResourceInformation,
+    HandlesUploads,
+    PreventsFormAbandonment,
+  ],
 
   props: mapProps([
     'resourceName',
@@ -148,12 +154,14 @@ export default {
       e.preventDefault()
       this.submittedViaUpdateResource = true
       this.submittedViaUpdateResourceAndContinueEditing = false
+      this.canLeave = true
       await this.updateResource()
     },
 
     async submitViaUpdateResourceAndContinueEditing() {
       this.submittedViaUpdateResourceAndContinueEditing = true
       this.submittedViaUpdateResource = false
+      this.canLeave = true
       await this.updateResource()
     },
 
@@ -190,8 +198,14 @@ export default {
             return
           }
         } catch (error) {
+          window.scrollTo(0, 0)
+
           this.submittedViaUpdateResource = false
           this.submittedViaUpdateResourceAndContinueEditing = false
+
+          if (this.resourceInformation.preventFormAbandonment) {
+            this.canLeave = false
+          }
 
           if (error.response.status == 422) {
             this.validationErrors = new Errors(error.response.data.errors)
@@ -238,6 +252,15 @@ export default {
     updateLastRetrievedAtTimestamp() {
       this.lastRetrievedAt = Math.floor(new Date().getTime() / 1000)
     },
+
+    /**
+     * Prevent accidental abandonment only if form was changed.
+     */
+    onUpdateFormStatus() {
+      if (this.resourceInformation.preventFormAbandonment) {
+        this.updateFormStatus()
+      }
+    },
   },
 
   computed: {
@@ -269,6 +292,10 @@ export default {
       }
 
       return this.resourceInformation.singularLabel
+    },
+
+    updateButtonLabel() {
+      return this.resourceInformation.updateButtonLabel
     },
 
     isRelation() {

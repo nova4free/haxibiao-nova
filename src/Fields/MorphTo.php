@@ -486,6 +486,7 @@ class MorphTo extends Field implements RelatableField
         $resourceClass = $this->resourceClass;
 
         return array_merge([
+            'debounce' => $this->debounce,
             'morphToId' => $this->morphToId,
             'morphToRelationship' => $this->morphToRelationship,
             'morphToType' => $this->morphToType,

@@ -36,6 +36,7 @@ class Stack extends Field
      * Create a new Stack field.
      *
      * @param  string  $name
+     * @param  string|array|null $attribute
      * @param  array $lines
      * @return void
      */

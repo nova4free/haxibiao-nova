@@ -47,7 +47,7 @@
     <div
       ref="chart"
       class="absolute pin rounded-b-lg ct-chart"
-      style="top: 60%;"
+      style="top: 60%"
     />
   </loading-card>
 </template>

@@ -1,6 +1,11 @@
 <template>
   <div>
-    <default-field :field="field" :show-errors="false" :field-name="fieldName">
+    <default-field
+      :field="field"
+      :show-errors="false"
+      :field-name="fieldName"
+      :show-help-text="showHelpText"
+    >
       <select
         v-if="hasMorphToTypes"
         :disabled="isLocked || isReadonly"
@@ -47,6 +52,7 @@
             @input="performSearch"
             @clear="clearSelection"
             @selected="selectResource"
+            :debounce="field.debounce"
             :value="selectedResource"
             :data="availableResources"
             :clearable="field.nullable"
@@ -335,7 +341,14 @@ export default {
      * Determine if we are creating a new resource via a parent relation
      */
     creatingViaRelatedResource() {
-      return Boolean(this.viaResource && this.viaResourceId)
+      return Boolean(
+        _.find(
+          this.field.morphToTypes,
+          type => type.value == this.viaResource
+        ) &&
+          this.viaResource &&
+          this.viaResourceId
+      )
     },
 
     /**

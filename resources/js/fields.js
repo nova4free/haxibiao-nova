@@ -39,6 +39,11 @@ Vue.component(
   require('./components/Detail/StackField.vue')
 )
 
+// Slug Field...
+Vue.component('index-slug-field', require('./components/Index/TextField.vue'))
+Vue.component('detail-slug-field', require('./components/Detail/TextField.vue'))
+Vue.component('form-slug-field', require('./components/Form/SlugField.vue'))
+
 // Text Field...
 Vue.component('index-text-field', require('./components/Index/TextField.vue'))
 Vue.component('detail-text-field', require('./components/Detail/TextField.vue'))

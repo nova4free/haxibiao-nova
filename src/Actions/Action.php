@@ -10,6 +10,7 @@ use Laravel\Nova\AuthorizedToSee;
 use Laravel\Nova\Exceptions\MissingActionHandlerException;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Http\Requests\ActionRequest;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Makeable;
 use Laravel\Nova\Metable;
 use Laravel\Nova\Nova;
@@ -635,6 +636,8 @@ class Action implements JsonSerializable
      */
     public function jsonSerialize()
     {
+        $request = app(NovaRequest::class);
+
         return array_merge([
             'cancelButtonText' => __($this->cancelButtonText),
             'component' => $this->component(),
@@ -644,8 +647,7 @@ class Action implements JsonSerializable
             'destructive' => $this instanceof DestructiveAction,
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
-            'fields' => collect($this->fields())->each->resolve(new class {
-            })->all(),
+            'fields' => collect($this->fields())->each->resolveForAction($request)->all(),
             'availableForEntireResource' => $this->availableForEntireResource,
             'showOnDetail' => $this->shownOnDetail(),
             'showOnIndex' => $this->shownOnIndex(),

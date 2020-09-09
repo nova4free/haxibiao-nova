@@ -1,7 +1,7 @@
 <template>
-  <default-field :field="field" :errors="errors">
+  <default-field :field="field" :errors="errors" :show-help-text="showHelpText">
     <template slot="field">
-      <div class="flex items-center mb-3">
+      <div class="flex items-center">
         <search-input
           v-if="isSearchable && !isLocked && !isReadonly"
           :data-testid="`${field.resourceName}-search-input`"
@@ -9,6 +9,7 @@
           @clear="clearSelection"
           @selected="selectResource"
           :error="hasError"
+          :debounce="field.debounce"
           :value="selectedResource"
           :data="availableResources"
           :clearable="field.nullable"
@@ -68,9 +69,9 @@
           :selected="selectedResourceId"
           label="display"
         >
-          <option value="" selected :disabled="!field.nullable">{{
-            placeholder
-          }}</option>
+          <option value="" selected :disabled="!field.nullable">
+            {{ placeholder }}
+          </option>
         </select-control>
 
         <create-relation-button
@@ -95,7 +96,7 @@
       </portal>
 
       <!-- Trashed State -->
-      <div v-if="shouldShowTrashed">
+      <div v-if="shouldShowTrashed" class="mt-3">
         <checkbox-with-label
           :dusk="`${field.resourceName}-with-trashed-checkbox`"
           :checked="withTrashed"

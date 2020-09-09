@@ -550,6 +550,17 @@ class FieldTest extends IntegrationTest
         $field->resolve((object) ['name' => 'David']);
         $this->assertEquals('Computed', $field->value);
     }
+
+    public function test_field_can_have_placeholder_text()
+    {
+        $field = Text::make('Name')->placeholder('This is placeholder text.');
+
+        $this->assertSubset([
+            'extraAttributes' => [
+                'placeholder' => 'This is placeholder text.',
+            ],
+        ], $field->jsonSerialize());
+    }
 }
 
 class SuggestionOptions

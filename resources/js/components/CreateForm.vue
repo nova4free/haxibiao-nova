@@ -5,6 +5,7 @@
     <form
       v-if="panels"
       @submit="submitViaCreateResource"
+      @change="onUpdateFormStatus"
       autocomplete="off"
       ref="form"
     >
@@ -71,6 +72,11 @@ export default {
       type: String,
       default: 'form',
       validator: val => ['modal', 'form'].includes(val),
+    },
+
+    updateFormStatus: {
+      type: Function,
+      default: () => {},
     },
 
     ...mapProps([
@@ -180,6 +186,8 @@ export default {
             data: { redirect, id },
           } = await this.createRequest()
 
+          this.canLeave = true
+
           Nova.success(
             this.__('The :resource was created!', {
               resource: this.resourceInformation.singularLabel.toLowerCase(),
@@ -199,9 +207,15 @@ export default {
             return
           }
         } catch (error) {
+          window.scrollTo(0, 0)
+
           this.submittedViaCreateAndAddAnother = false
           this.submittedViaCreateResource = true
           this.isWorking = false
+
+          if (this.resourceInformation.preventFormAbandonment) {
+            this.canLeave = false
+          }
 
           if (error.response.status == 422) {
             this.validationErrors = new Errors(error.response.data.errors)
@@ -251,6 +265,15 @@ export default {
         formData.append('viaResourceId', this.viaResourceId)
         formData.append('viaRelationship', this.viaRelationship)
       })
+    },
+
+    /**
+     * Prevent accidental abandonment only if form was changed.
+     */
+    onUpdateFormStatus() {
+      if (this.resourceInformation.preventFormAbandonment) {
+        this.updateFormStatus()
+      }
     },
   },
 

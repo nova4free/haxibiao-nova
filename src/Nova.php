@@ -154,7 +154,7 @@ class Nova
      */
     public static function version()
     {
-        return '3.8.4';
+        return '3.9.1';
     }
 
     /**
@@ -214,9 +214,11 @@ class Nova
                 'label' => $resource::label(),
                 'singularLabel' => $resource::singularLabel(),
                 'createButtonLabel' => $resource::createButtonLabel(),
+                'updateButtonLabel' => $resource::updateButtonLabel(),
                 'authorizedToCreate' => $resource::authorizedToCreate($request),
                 'searchable' => $resource::searchable(),
                 'perPageOptions' => $resource::perPageOptions(),
+                'preventFormAbandonment' => $resource::preventFormAbandonment($request),
                 'tableStyle' => $resource::tableStyle(),
                 'showColumnBorders' => $resource::showColumnBorders(),
             ], $resource::additionalInformation($request));

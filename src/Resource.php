@@ -135,6 +135,13 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
     public static $trafficCop = true;
 
     /**
+     * Indicates whether Nova should prevent the user from leaving an unsaved form, losing their data.
+     *
+     * @var bool
+     */
+    public static $preventFormAbandonment = false;
+
+    /**
      * The maximum value of the resource's primary key column.
      *
      * @var int
@@ -225,7 +232,7 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
     }
 
     /**
-     * Detetermine whether the global search links will take the user to the detail page.
+     * Determine whether the global search links will take the user to the detail page.
      *
      * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      *
@@ -309,6 +316,16 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
     }
 
     /**
+     * Get the text for the update resource button.
+     *
+     * @return string|null
+     */
+    public static function updateButtonLabel()
+    {
+        return __('Update :resource', ['resource' => static::singularLabel()]);
+    }
+
+    /**
      * Get a fresh instance of the model represented by the resource.
      *
      * @return mixed
@@ -360,6 +377,17 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
     public static function trafficCop(Request $request)
     {
         return static::$trafficCop;
+    }
+
+    /**
+     * Indicates whether Nova should prevent the user from leaving an unsaved form, losing their data.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return  bool
+     */
+    public static function preventFormAbandonment(Request $request)
+    {
+        return static::$preventFormAbandonment;
     }
 
     /**

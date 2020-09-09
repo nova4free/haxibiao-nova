@@ -7,13 +7,16 @@
     :via-resource="viaResource"
     :via-resource-id="viaResourceId"
     :via-relationship="viaRelationship"
+    :update-form-status="updateFormStatus"
   />
 </template>
 
 <script>
-import { mapProps } from 'laravel-nova'
+import { mapProps, PreventsFormAbandonment } from 'laravel-nova'
 
 export default {
+  mixins: [PreventsFormAbandonment],
+
   props: {
     mode: {
       type: String,
@@ -31,6 +34,8 @@ export default {
 
   methods: {
     handleResourceCreated({ redirect, id }) {
+      this.canLeave = true
+
       if (this.mode == 'form') {
         return this.$router.push({ path: redirect })
       }
