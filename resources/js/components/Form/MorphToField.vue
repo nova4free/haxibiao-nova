@@ -4,7 +4,7 @@
       :field="field"
       :show-errors="false"
       :field-name="fieldName"
-      :show-help-text="showHelpText"
+      :show-help-text="field.helpText != null"
     >
       <select
         v-if="hasMorphToTypes"
@@ -204,9 +204,10 @@ export default {
       this.selectedResourceId = this.viaResourceId
     }
 
-    if (this.shouldSelectInitialResource && !this.isSearchable) {
-      this.getAvailableResources().then(() => this.selectInitialResource())
-    } else if (this.shouldSelectInitialResource && this.isSearchable) {
+    if (this.shouldSelectInitialResource) {
+      if (!this.resourceType && this.field.defaultResource) {
+        this.resourceType = this.field.defaultResource
+      }
       this.getAvailableResources().then(() => this.selectInitialResource())
     }
 
@@ -224,6 +225,10 @@ export default {
     selectResourceFromSelectControl(e) {
       this.selectedResourceId = e.target.value
       this.selectInitialResource()
+
+      if (this.field) {
+        Nova.$emit(this.field.attribute + '-change', this.selectedResourceId)
+      }
     },
 
     /**
@@ -356,7 +361,9 @@ export default {
      */
     shouldSelectInitialResource() {
       return Boolean(
-        this.editingExistingResource || this.creatingViaRelatedResource
+        this.editingExistingResource ||
+          this.creatingViaRelatedResource ||
+          Boolean(this.field.value && this.field.defaultResource)
       )
     },
 

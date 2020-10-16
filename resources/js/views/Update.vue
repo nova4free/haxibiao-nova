@@ -75,6 +75,17 @@ export default {
     PreventsFormAbandonment,
   ],
 
+  metaInfo() {
+    if (this.resourceInformation && this.title) {
+      return {
+        title: this.__('Update :resource: :title', {
+          resource: this.resourceInformation.singularLabel,
+          title: this.title,
+        }),
+      }
+    }
+  },
+
   props: mapProps([
     'resourceName',
     'resourceId',
@@ -88,6 +99,7 @@ export default {
     loading: true,
     submittedViaUpdateResourceAndContinueEditing: false,
     submittedViaUpdateResource: false,
+    title: null,
     fields: [],
     panels: [],
     validationErrors: new Errors(),
@@ -122,7 +134,7 @@ export default {
       this.fields = []
 
       const {
-        data: { panels, fields },
+        data: { title, panels, fields },
       } = await Nova.request()
         .get(
           `/nova-api/${this.resourceName}/${this.resourceId}/update-fields`,
@@ -143,6 +155,7 @@ export default {
           }
         })
 
+      this.title = title
       this.panels = panels
       this.fields = fields
       this.loading = false

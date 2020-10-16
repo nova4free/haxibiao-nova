@@ -67,6 +67,16 @@ import HandlesUploads from '@/mixins/HandlesUploads'
 export default {
   mixins: [InteractsWithResourceInformation, HandlesUploads],
 
+  metaInfo() {
+    if (this.shouldOverrideMeta && this.resourceInformation) {
+      return {
+        title: this.__('Create :resource', {
+          resource: this.resourceInformation.singularLabel,
+        }),
+      }
+    }
+  },
+
   props: {
     mode: {
       type: String,
@@ -84,6 +94,7 @@ export default {
       'viaResource',
       'viaResourceId',
       'viaRelationship',
+      'shouldOverrideMeta',
     ]),
   },
 

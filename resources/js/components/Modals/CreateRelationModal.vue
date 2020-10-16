@@ -45,14 +45,6 @@ export default {
     viaRelationship: {},
   },
 
-  created() {
-    console.log('created', this.resourceName)
-  },
-
-  mounted() {
-    console.log('mounted', this.resourceName)
-  },
-
   methods: {
     handleRefresh(data) {
       // alert('wew refreshing')

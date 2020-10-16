@@ -248,6 +248,7 @@ class UserResource extends Resource
             new ExceptionAction,
             new FailingAction,
             new NoopAction,
+            StandaloneAction::make()->standalone(),
             tap(new QueuedAction, function (QueuedAction $action) {
                 if ($_SERVER['nova.user.actionCallbacks'] ?? false) {
                     $action->canRun(function ($request, $model) {

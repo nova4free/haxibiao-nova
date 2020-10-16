@@ -30,6 +30,13 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
         ResolvesCards;
 
     /**
+     * The default displayable pivot class name.
+     *
+     * @var string
+     */
+    const DEFAULT_PIVOT_NAME = 'Pivot';
+
+    /**
      * The visual style used for the table. Available options are 'tight' and 'default'.
      *
      * @var string
@@ -100,11 +107,23 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
     public static $globalSearchResults = 5;
 
     /**
+     * The number of results to display when searching the resource using Scout.
+     */
+    public static $scoutSearchResults = 200;
+
+    /**
      * Where should the global search link to?
      *
      * @var string
      */
     public static $globalSearchLink = 'detail';
+
+    /**
+     * Indicates if the resource should be searchable on the index view.
+     *
+     * @var bool
+     */
+    public static $searchable = true;
 
     /**
      * The per-page options used the resource index.
@@ -149,11 +168,25 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
     public static $maxPrimaryKeySize = PHP_INT_MAX;
 
     /**
-     * The default displayable pivot class name.
+     * Indicates whether the resource should automatically poll for new resources.
      *
-     * @var string
+     * @var bool
      */
-    const DEFAULT_PIVOT_NAME = 'Pivot';
+    public static $polling = false;
+
+    /**
+     * The interval at which Nova should poll for new resources.
+     *
+     * @var int
+     */
+    public static $pollingInterval = 15;
+
+    /**
+     * The debounce amount to use when searching this resource.
+     *
+     * @var float
+     */
+    public static $debounce = 0.5;
 
     /**
      * Create a new resource instance.
@@ -228,7 +261,7 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
      */
     public static function searchable()
     {
-        return ! empty(static::$search) || static::usesScout();
+        return (static::$searchable && ! empty(static::searchableColumns())) || (static::$searchable && static::usesScout());
     }
 
     /**
@@ -272,7 +305,7 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
      */
     public static function label()
     {
-        return __(Str::plural(Str::title(Str::snake(class_basename(get_called_class()), ' '))));
+        return Str::plural(Str::title(Str::snake(class_basename(get_called_class()), ' ')));
     }
 
     /**
@@ -282,7 +315,7 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
      */
     public static function singularLabel()
     {
-        return __(Str::singular(Str::title(Str::snake(class_basename(get_called_class()), ' '))));
+        return Str::singular(static::label());
     }
 
     /**
@@ -400,6 +433,7 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
     public function serializeForIndex(NovaRequest $request, $fields = null)
     {
         return array_merge($this->serializeWithId($fields ?: $this->indexFields($request)), [
+            'title' => static::title(),
             'actions' => $this->availableActions($request),
             'authorizedToView' => $this->authorizedToView($request),
             'authorizedToCreate' => $this->authorizedToCreate($request),
@@ -416,11 +450,13 @@ abstract class Resource implements ArrayAccess, JsonSerializable, UrlRoutable
      * Prepare the resource for JSON serialization.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Resource $resource
      * @return array
      */
-    public function serializeForDetail(NovaRequest $request)
+    public function serializeForDetail(NovaRequest $request, Resource $resource)
     {
-        return array_merge($this->serializeWithId($this->detailFieldsWithinPanels($request)), [
+        return array_merge($this->serializeWithId($this->detailFieldsWithinPanels($request, $resource)), [
+            'title' => static::title(),
             'authorizedToCreate' => $this->authorizedToCreate($request),
             'authorizedToUpdate' => $this->authorizedToUpdate($request),
             'authorizedToDelete' => $this->authorizedToDelete($request),

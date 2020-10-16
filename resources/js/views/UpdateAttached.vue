@@ -6,9 +6,14 @@
       :resource-id="resourceId"
     />
 
-    <heading class="mb-3">{{
-      __('Update :resource', { resource: relatedResourceLabel })
-    }}</heading>
+    <heading class="mb-3" v-if="relatedResourceLabel && title">
+      {{
+        __('Update attached :resource: :title', {
+          resource: relatedResourceLabel,
+          title: this.title,
+        })
+      }}
+    </heading>
 
     <form
       v-if="field"
@@ -18,10 +23,14 @@
     >
       <card class="overflow-hidden mb-8">
         <!-- Related Resource -->
-        <default-field :field="field" :errors="validationErrors">
+        <default-field
+          :field="field"
+          :errors="validationErrors"
+          :show-help-text="field.helpText != null"
+        >
           <template slot="field">
             <select-control
-              class="form-control form-select mb-3 w-full"
+              class="form-control form-select w-full"
               dusk="attachable-select"
               :class="{
                 'border-danger': validationErrors.has(field.attribute),
@@ -53,6 +62,7 @@
             :via-resource="viaResource"
             :via-resource-id="viaResourceId"
             :via-relationship="viaRelationship"
+            :show-help-text="field.helpText != null"
           />
         </div>
       </card>
@@ -99,6 +109,17 @@ import {
 export default {
   mixins: [PerformsSearches, TogglesTrashed, PreventsFormAbandonment],
 
+  metaInfo() {
+    if (this.relatedResourceLabel && this.title) {
+      return {
+        title: this.__('Update attached :resource: :title', {
+          resource: this.relatedResourceLabel,
+          title: this.title,
+        }),
+      }
+    }
+  },
+
   props: {
     resourceName: {
       type: String,
@@ -139,6 +160,7 @@ export default {
     selectedResource: null,
     selectedResourceId: null,
     lastRetrievedAt: null,
+    title: null,
   }),
 
   created() {
@@ -161,8 +183,7 @@ export default {
       this.softDeletes = false
       this.disableWithTrashed()
       this.clearSelection()
-      this.getField()
-
+      await this.getField()
       await this.getPivotFields()
       await this.getAvailableResources()
 
@@ -176,22 +197,20 @@ export default {
     /**
      * Get the many-to-many relationship field.
      */
-    getField() {
+    async getField() {
       this.field = null
 
-      Nova.request()
-        .get(
-          '/nova-api/' + this.resourceName + '/field/' + this.viaRelationship
-        )
-        .then(({ data }) => {
-          this.field = data
+      const { data: field } = await Nova.request().get(
+        '/nova-api/' + this.resourceName + '/field/' + this.viaRelationship
+      )
 
-          if (this.field.searchable) {
-            this.determineIfSoftDeletes()
-          }
+      this.field = field
 
-          this.loading = false
-        })
+      if (this.field.searchable) {
+        this.determineIfSoftDeletes()
+      }
+
+      this.loading = false
     },
 
     /**
@@ -200,7 +219,9 @@ export default {
     async getPivotFields() {
       this.fields = []
 
-      const { data } = await Nova.request()
+      const {
+        data: { title, fields },
+      } = await Nova.request()
         .get(
           `/nova-api/${this.resourceName}/${this.resourceId}/update-pivot-fields/${this.relatedResourceName}/${this.relatedResourceId}`,
           {
@@ -218,10 +239,13 @@ export default {
           }
         })
 
-      this.fields = data
+      this.title = title
+      this.fields = fields
 
       _.each(this.fields, field => {
-        field.fill = () => ''
+        if (field) {
+          field.fill = () => ''
+        }
       })
     },
 
@@ -245,9 +269,7 @@ export default {
         this.availableResources = response.data.resources
         this.withTrashed = response.data.withTrashed
         this.softDeletes = response.data.softDeletes
-      } catch (error) {
-        console.log(error)
-      }
+      } catch (error) {}
     },
 
     /**
@@ -286,7 +308,10 @@ export default {
         window.scrollTo(0, 0)
 
         this.submittedViaUpdateAttachedResource = false
-        if (this.resourceInformation.preventFormAbandonment) {
+        if (
+          this.resourceInformation &&
+          this.resourceInformation.preventFormAbandonment
+        ) {
           this.canLeave = false
         }
 
@@ -359,8 +384,11 @@ export default {
      */
     selectResourceFromSelectControl(e) {
       this.selectedResourceId = e.target.value
-      console.log(e.target.value, this.selectedResourceId)
       this.selectInitialResource()
+
+      if (this.field) {
+        Nova.$emit(this.field.attribute + '-change', this.selectedResourceId)
+      }
     },
 
     /**
@@ -396,7 +424,10 @@ export default {
      * Prevent accidental abandonment only if form was changed.
      */
     onUpdateFormStatus() {
-      if (this.resourceInformation.preventFormAbandonment) {
+      if (
+        this.resourceInformation &&
+        this.resourceInformation.preventFormAbandonment
+      ) {
         this.updateFormStatus()
       }
     },

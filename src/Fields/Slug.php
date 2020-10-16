@@ -90,6 +90,7 @@ class Slug extends Field
         }
 
         return array_merge([
+            'updating' => $request->isUpdateOrUpdateAttachedRequest(),
             'from' => Str::lower($this->from),
             'separator' => $this->separator,
             'showCustomizeButton' => $this->showCustomizeButton,

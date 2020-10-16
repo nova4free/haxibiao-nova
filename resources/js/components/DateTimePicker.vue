@@ -56,8 +56,18 @@ export default {
 
   data: () => ({ flatpickr: null }),
 
+  watch: {
+    value: function (newValue, oldValue) {
+      this.flatpickr.setDate(newValue)
+    },
+  },
+
   mounted() {
-    this.$nextTick(() => {
+    this.$nextTick(() => this.createFlatpickr())
+  },
+
+  methods: {
+    createFlatpickr() {
       this.flatpickr = flatpickr(this.$refs.datePicker, {
         enableTime: this.enableTime,
         enableSeconds: this.enableSeconds,
@@ -71,10 +81,8 @@ export default {
         time_24hr: !this.twelveHourTime,
         locale: { firstDayOfWeek: this.firstDayOfWeek },
       })
-    })
-  },
+    },
 
-  methods: {
     onChange(event) {
       this.$emit('change', this.$refs.datePicker.value)
     },

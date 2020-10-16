@@ -157,11 +157,23 @@ import {
   Errors,
   Deletable,
   Minimum,
+  mapProps,
   HasCards,
 } from 'laravel-nova'
 
 export default {
-  props: ['resourceName', 'resourceId'],
+  metaInfo() {
+    if (this.resourceInformation && this.title) {
+      return {
+        title: this.__(':resource Details: :title', {
+          resource: this.resourceInformation.singularLabel,
+          title: this.title,
+        }),
+      }
+    }
+  },
+
+  props: mapProps(['resourceName', 'resourceId']),
 
   mixins: [Deletable, HasCards, InteractsWithResourceInformation],
 
@@ -169,6 +181,7 @@ export default {
     initialLoading: true,
     loading: true,
 
+    title: null,
     resource: null,
     panels: [],
     actions: [],
@@ -253,7 +266,8 @@ export default {
           '/nova-api/' + this.resourceName + '/' + this.resourceId
         )
       )
-        .then(({ data: { panels, resource } }) => {
+        .then(({ data: { title, panels, resource } }) => {
+          this.title = title
           this.panels = panels
           this.resource = resource
           this.loading = false

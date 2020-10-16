@@ -18,7 +18,11 @@
     >
       <card class="overflow-hidden mb-8">
         <!-- Related Resource -->
-        <default-field :field="field" :errors="validationErrors">
+        <default-field
+          :field="field"
+          :errors="validationErrors"
+          :show-help-text="field.helpText != null"
+        >
           <template slot="field">
             <search-input
               v-if="field.searchable"
@@ -30,7 +34,6 @@
               :value="selectedResource"
               :data="availableResources"
               trackBy="value"
-              class="mb-3"
             >
               <div
                 slot="default"
@@ -82,7 +85,7 @@
             <select-control
               v-else
               dusk="attachable-select"
-              class="form-control form-select mb-3 w-full"
+              class="form-control form-select w-full"
               :class="{
                 'border-danger': validationErrors.has(field.attribute),
               }"
@@ -169,6 +172,16 @@ import {
 
 export default {
   mixins: [PerformsSearches, TogglesTrashed, PreventsFormAbandonment],
+
+  metaInfo() {
+    if (this.relatedResourceLabel) {
+      return {
+        title: this.__('Attach :resource', {
+          resource: this.relatedResourceLabel,
+        }),
+      }
+    }
+  },
 
   props: {
     resourceName: {
@@ -340,7 +353,10 @@ export default {
         window.scrollTo(0, 0)
 
         this.submittedViaAttachResource = false
-        if (this.resourceInformation.preventFormAbandonment) {
+        if (
+          this.resourceInformation &&
+          this.resourceInformation.preventFormAbandonment
+        ) {
           this.canLeave = false
         }
 
@@ -396,6 +412,10 @@ export default {
     selectResourceFromSelectControl(e) {
       this.selectedResourceId = e.target.value
       this.selectInitialResource()
+
+      if (this.field) {
+        Nova.$emit(this.field.attribute + '-change', this.selectedResourceId)
+      }
     },
 
     /**
@@ -424,7 +444,10 @@ export default {
      * Prevent accidental abandonment only if form was changed.
      */
     onUpdateFormStatus() {
-      if (this.resourceInformation.preventFormAbandonment) {
+      if (
+        this.resourceInformation &&
+        this.resourceInformation.preventFormAbandonment
+      ) {
         this.updateFormStatus()
       }
     },

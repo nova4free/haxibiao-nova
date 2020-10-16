@@ -141,7 +141,9 @@ export default {
             }
 
             if (this.suffix) {
-              const suffix = SingularOrPlural(value, this.suffix)
+              const suffix = this.suffixInflection
+                ? SingularOrPlural(value, this.suffix)
+                : this.suffix
 
               return `${formattedValue} ${suffix}`
             }

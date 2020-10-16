@@ -17,7 +17,7 @@
         type="button"
         @click="toggleCustomizeClick"
       >
-        Customize
+        {{ __('Customize') }}
       </button>
     </template>
   </default-field>
@@ -31,7 +31,7 @@ export default {
   mixins: [HandlesValidationErrors, FormField],
 
   mounted() {
-    if (!this.field.readonly) {
+    if (this.shouldRegisterInitialListener) {
       this.registerChangeListener()
     }
   },
@@ -66,12 +66,16 @@ export default {
   },
 
   computed: {
+    shouldRegisterInitialListener() {
+      return !this.field.updating
+    },
+
     eventName() {
       return `${this.field.from}-change`
     },
 
     extraAttributes() {
-      return this.field.extraAttributes
+      return this.field.extraAttributes || {}
     },
   },
 }
