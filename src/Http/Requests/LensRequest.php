@@ -2,7 +2,9 @@
 
 namespace Laravel\Nova\Http\Requests;
 
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
+use Laravel\Nova\Contracts\RelatableField;
 
 class LensRequest extends NovaRequest
 {
@@ -51,7 +53,19 @@ class LensRequest extends NovaRequest
             return $query;
         }
 
-        if ($this->lens()->resolveFields($this)->findFieldByAttribute($this->orderBy)) {
+        $model = $this->model();
+
+        $fieldExists = $this->lens()->availableFields($this)
+            ->transform(function ($field) use ($model) {
+                return $field instanceof RelatableField
+                    ? $this->getRelationForeignKeyName($model->{$field->attribute}())
+                    : $field->attribute ?? null;
+            })->filter()
+            ->first(function ($attribute) {
+                return $attribute == $this->orderBy;
+            });
+
+        if ($fieldExists) {
             return $query->orderBy(
                 ($this->tableOrderPrefix ? $query->getModel()->getTable().'.' : '').$this->orderBy,
                 $this->orderByDirection === 'asc' ? 'asc' : 'desc'
@@ -106,5 +120,18 @@ class LensRequest extends NovaRequest
                 return $payload;
             });
         });
+    }
+
+    /**
+     * Get foreign key name for relation.
+     *
+     * @param  \Illuminate\Database\Eloquent\Relations\Relation $relation
+     * @return string
+     */
+    protected function getRelationForeignKeyName(Relation $relation)
+    {
+        return method_exists($relation, 'getForeignKeyName')
+            ? $relation->getForeignKeyName()
+            : $relation->getForeignKey();
     }
 }

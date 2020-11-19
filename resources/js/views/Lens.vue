@@ -219,6 +219,7 @@
             :relationship-type="relationshipType"
             :update-selection-status="updateSelectionStatus"
             @order="orderByField"
+            @reset-order-by="resetOrderBy"
             @delete="deleteResources"
             @restore="restoreResources"
             @actionExecuted="getResources"
@@ -348,8 +349,6 @@ export default {
     this.initializePerPageFromQueryString()
     this.initializeTrashedFromQueryString()
     this.initializeOrderingFromQueryString()
-
-    this.perPage = this.resourceInformation.perPageOptions[0]
 
     await this.initializeFilters(this.lens)
     this.getResources()
@@ -511,6 +510,16 @@ export default {
     },
 
     /**
+     * Reset the order by to its default state
+     */
+    resetOrderBy(field) {
+      this.updateQueryString({
+        [this.orderByParameter]: field.sortableUriKey,
+        [this.orderByDirectionParameter]: null,
+      })
+    },
+
+    /**
      * Sync the current search value from the query string.
      */
     initializeSearchFromQueryString() {
@@ -591,7 +600,8 @@ export default {
      */
     initializePerPageFromQueryString() {
       this.perPage =
-        this.$route.query[this.perPageParameter] || _.first(this.perPageOptions)
+        this.$route.query[this.perPageParameter] ||
+        this.resourceInformation.perPageOptions[0]
     },
   },
 

@@ -22,7 +22,9 @@ class UserResource extends Resource
      *
      * @var string
      */
-    public static $model = \Laravel\Nova\Tests\Fixtures\User::class; /**
+    public static $model = \Laravel\Nova\Tests\Fixtures\User::class;
+
+    /**
      * The columns that should be searched.
      *
      * @var array
@@ -227,6 +229,7 @@ class UserResource extends Resource
     {
         return [
             new UserLens,
+            new HavingUserLens,
             new GroupingUserLens,
             new PaginatingUserLens,
         ];

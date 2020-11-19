@@ -46,6 +46,24 @@ class CurrencyTest extends IntegrationTest
         $this->assertEquals('€ 200,00', $field->value);
     }
 
+    public function test_the_field_handles_null()
+    {
+        $field = Currency::make('Cost')->nullable();
+
+        $field->resolveForDisplay((object) ['cost' => null]);
+
+        $this->assertNull($field->value);
+    }
+
+    public function test_the_field_handles_null_without_setting_as_nullable()
+    {
+        $field = Currency::make('Cost');
+
+        $field->resolveForDisplay((object) ['cost' => null]);
+
+        $this->assertNull($field->value);
+    }
+
     public function test_the_field_can_use_minor_units()
     {
         $field = Currency::make('Cost')->asMinorUnits();

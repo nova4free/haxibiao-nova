@@ -105,7 +105,7 @@
             </select-control>
 
             <!-- Trashed State -->
-            <div v-if="softDeletes">
+            <div v-if="softDeletes" class="mt-3">
               <checkbox-with-label
                 :dusk="field.resourceName + '-with-trashed-checkbox'"
                 :checked="withTrashed"
@@ -127,6 +127,7 @@
             :via-resource="viaResource"
             :via-resource-id="viaResourceId"
             :via-relationship="viaRelationship"
+            :show-help-text="field.helpText != null"
           />
         </div>
       </card>

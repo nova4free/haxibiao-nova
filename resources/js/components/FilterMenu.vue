@@ -66,7 +66,7 @@
         </div>
 
         <!-- Per Page -->
-        <div v-if="!viaResource">
+        <div v-if="!viaResource" dusk="filter-per-page">
           <h3
             slot="default"
             class="text-sm uppercase tracking-wide text-80 bg-30 p-3"

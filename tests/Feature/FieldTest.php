@@ -4,8 +4,10 @@ namespace Laravel\Nova\Tests\Feature;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Fields\Avatar;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Fields\Heading;
 use Laravel\Nova\Fields\MorphTo;
 use Laravel\Nova\Fields\Password;
@@ -16,6 +18,7 @@ use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Tests\Fixtures\File;
 use Laravel\Nova\Tests\Fixtures\FileResource;
+use Laravel\Nova\Tests\Fixtures\Post;
 use Laravel\Nova\Tests\Fixtures\PostResource;
 use Laravel\Nova\Tests\Fixtures\UserResource;
 use Laravel\Nova\Tests\IntegrationTest;
@@ -26,6 +29,13 @@ class FieldTest extends IntegrationTest
     public function setUp(): void
     {
         parent::setUp();
+    }
+
+    public function tearDown(): void
+    {
+        parent::tearDown();
+
+        Field::$customComponents = [];
     }
 
     public function test_component_can_be_customized()
@@ -91,6 +101,22 @@ class FieldTest extends IntegrationTest
         $this->assertEquals('Computed', $field->value);
     }
 
+    public function test_computed_fields_resolve_for_display_once()
+    {
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+
+        $field = Text::make('InvokableComputed', function ($resource) {
+            return Post::count(); // Do a simple SQL query
+        });
+
+        $field->resolveForDisplay((object) []);
+        $this->assertEquals(1, count(DB::getQueryLog()));
+
+        DB::flushQueryLog();
+        DB::disableQueryLog();
+    }
+
     public function test_computed_fields_use_display_callback()
     {
         $field = Text::make('InvokableComputed', function ($resource) {
@@ -101,6 +127,24 @@ class FieldTest extends IntegrationTest
 
         $field->resolveForDisplay((object) []);
         $this->assertEquals('Displayed Via Computed Field', $field->value);
+    }
+
+    public function test_computed_fields_resolve_once_with_display_callback()
+    {
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+
+        $field = Text::make('InvokableComputed', function ($resource) {
+            return Post::count();
+        })->displayUsing(function ($value) {
+            return sprintf('Count Is %s', $value);
+        });
+
+        $field->resolveForDisplay((object) []);
+        $this->assertEquals(1, count(DB::getQueryLog()));
+
+        DB::flushQueryLog();
+        DB::disableQueryLog();
     }
 
     public function test_computed_fields_resolve_with_resource()

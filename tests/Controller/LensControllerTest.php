@@ -7,6 +7,7 @@ use Laravel\Nova\Tests\Fixtures\IdFilter;
 use Laravel\Nova\Tests\Fixtures\LensFieldValidationAction;
 use Laravel\Nova\Tests\Fixtures\NoopAction;
 use Laravel\Nova\Tests\Fixtures\NoopInlineAction;
+use Laravel\Nova\Tests\Fixtures\Post;
 use Laravel\Nova\Tests\Fixtures\User;
 use Laravel\Nova\Tests\IntegrationTest;
 
@@ -112,5 +113,39 @@ class LensControllerTest extends IntegrationTest
         $this->assertEquals(2, $response->original['resources'][0]['id']->value);
 
         $response->assertJsonCount(1, 'resources');
+    }
+
+    public function test_lenses_can_be_sorted()
+    {
+        factory(Post::class)->create();
+        factory(Post::class)->create();
+        factory(Post::class)->create();
+
+        $response = $this->withExceptionHandling()
+                        ->getJson('/nova-api/posts/lens/post-lens?orderBy=id&orderByDirection=desc');
+
+        $this->assertEquals(3, $response->original['resources'][0]['id']->value);
+        $this->assertEquals(2, $response->original['resources'][1]['id']->value);
+        $this->assertEquals(1, $response->original['resources'][2]['id']->value);
+
+        $response->assertJsonCount(3, 'resources');
+    }
+
+    public function test_lenses_can_be_sorted_using_relation()
+    {
+        $users = factory(User::class, 3)->create();
+
+        factory(Post::class)->create(['user_id' => $users[0]->id]);
+        factory(Post::class)->create(['user_id' => $users[2]->id]);
+        factory(Post::class)->create(['user_id' => $users[1]->id]);
+
+        $response = $this->withExceptionHandling()
+                        ->getJson('/nova-api/posts/lens/post-lens?orderBy=user_id&orderByDirection=desc');
+
+        $this->assertEquals(2, $response->original['resources'][0]['id']->value);
+        $this->assertEquals(3, $response->original['resources'][1]['id']->value);
+        $this->assertEquals(1, $response->original['resources'][2]['id']->value);
+
+        $response->assertJsonCount(3, 'resources');
     }
 }

@@ -58,7 +58,9 @@ export default {
 
   watch: {
     value: function (newValue, oldValue) {
-      this.flatpickr.setDate(newValue)
+      if (this.flatpickr) {
+        this.flatpickr.setDate(newValue)
+      }
     },
   },
 

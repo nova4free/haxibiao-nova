@@ -155,6 +155,19 @@ class PostResource extends Resource
     }
 
     /**
+     * Get the lenses available for the resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
+     */
+    public function lenses(Request $request)
+    {
+        return [
+            new PostLens,
+        ];
+    }
+
+    /**
      * Get the URI key for the resource.
      *
      * @return string

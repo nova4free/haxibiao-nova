@@ -225,6 +225,21 @@ class Currency extends Number
     }
 
     /**
+     * Check value for null value.
+     *
+     * @param  mixed $value
+     * @return bool
+     */
+    protected function isNullValue($value)
+    {
+        if (is_null($value)) {
+            return true;
+        }
+
+        return parent::isNullValue($value);
+    }
+
+    /**
      * Determine the step value for the field.
      *
      * @return string
