@@ -184,7 +184,7 @@ class MorphToMany extends Field implements DeletableContract, ListableField, Piv
                               );
 
         return $query->tap(function ($query) use ($request, $model) {
-            forward_static_call($this->attachableQueryCallable($request, $model), $request, $query);
+            forward_static_call($this->attachableQueryCallable($request, $model), $request, $query, $this);
         });
     }
 
@@ -301,7 +301,7 @@ class MorphToMany extends Field implements DeletableContract, ListableField, Piv
             'resourceName' => $this->resourceName,
             'searchable' => $this->searchable,
             'withSubtitles' => $this->withSubtitles,
-            'singularLabel' => $this->singularLabel ?? Str::singular($this->name),
+            'singularLabel' => $this->singularLabel ?? $this->resourceClass::singularLabel(),
         ], parent::jsonSerialize());
     }
 }

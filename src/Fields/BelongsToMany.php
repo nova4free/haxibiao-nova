@@ -184,7 +184,7 @@ class BelongsToMany extends Field implements DeletableContract, ListableField, P
                               );
 
         return $query->tap(function ($query) use ($request, $model) {
-            forward_static_call($this->attachableQueryCallable($request, $model), $request, $query);
+            forward_static_call($this->attachableQueryCallable($request, $model), $request, $query, $this);
         });
     }
 
@@ -314,7 +314,7 @@ class BelongsToMany extends Field implements DeletableContract, ListableField, P
             'resourceName' => $this->resourceName,
             'searchable' => $this->searchable,
             'withSubtitles' => $this->withSubtitles,
-            'singularLabel' => $this->singularLabel ?? Str::singular($this->name),
+            'singularLabel' => $this->singularLabel ?? $this->resourceClass::singularLabel(),
         ], parent::jsonSerialize());
     }
 }
