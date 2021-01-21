@@ -1,6 +1,6 @@
 {
-  "name": "laravel/nova",
-  "description": "A wonderful administration interface for Laravel.",
+  "name": "haxibiao/console",
+  "description": "基于larvel/nova的后台管理系统.",
   "keywords": [
     "laravel",
     "admin"
