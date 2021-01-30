@@ -16,8 +16,6 @@ class CreateWithInlineRelationButtonTest extends DuskTestCase
      */
     public function morph_to_resource_can_be_created_with_attaching_file_to_parent()
     {
-        $this->setupLaravel();
-
         $this->whileInlineCreate(function () {
             $post = PostFactory::new()->create();
 
@@ -27,7 +25,8 @@ class CreateWithInlineRelationButtonTest extends DuskTestCase
                         ->select('@commentable-type', 'posts')
                         ->pause(500)
                         ->runInlineCreate('commentable', function ($browser) {
-                            $browser->select('@user', 1)
+                            $browser->waitForText('Create User Post', 25)
+                                ->select('@user', 1)
                                 ->type('@title', 'Test Post')
                                 ->type('@body', 'Test Post Body')
                                 ->attach('@attachment', __DIR__.'/Fixtures/Document.pdf');
@@ -51,8 +50,6 @@ class CreateWithInlineRelationButtonTest extends DuskTestCase
      */
     public function morph_to_resource_can_be_created_with_attaching_file_to_child()
     {
-        $this->setupLaravel();
-
         $this->whileInlineCreate(function () {
             $post = PostFactory::new()->create();
 
@@ -62,7 +59,8 @@ class CreateWithInlineRelationButtonTest extends DuskTestCase
                         ->select('@commentable-type', 'posts')
                         ->pause(500)
                         ->runInlineCreate('commentable', function ($browser) {
-                            $browser->select('@user', 1)
+                            $browser->waitForText('Create User Post', 25)
+                                ->select('@user', 1)
                                 ->type('@title', 'Test Post')
                                 ->type('@body', 'Test Post Body');
                         })
