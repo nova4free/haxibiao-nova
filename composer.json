@@ -1,6 +1,6 @@
 {
-  "name": "laravel/nova",
-  "description": "A wonderful administration interface for Laravel.",
+  "name": "haxibiao/console",
+  "description": "临时兼容 haxibiao/breeze 依赖 laravel/nova 的license问题",
   "keywords": [
     "laravel",
     "admin"
@@ -8,8 +8,8 @@
   "license": "MIT",
   "authors": [
     {
-      "name": "Taylor Otwell",
-      "email": "taylor@laravel.com"
+      "name": "ivan",
+      "email": "ivan@haxibiao.com"
     }
   ],
   "require": {
